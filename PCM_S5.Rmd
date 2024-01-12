@@ -1,0 +1,240 @@
+---
+title: "PCM_S5"
+author: "Marcial Escudero"
+date: "2024-01-12"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+El MODELO DE MARKOV
+
+El modelo predominante para estudiar la evolución de rasgos discretos en la filogenia se llama el modeo de Markov (Lewis 2001). Este modelo describe un procesos continuo en el tiempo donde hay un número de estados de carácter K. Este modelo inspiró los modelos que se se usan para modelizar la evolución de las moleculas de ADN (Yang 2006).
+En el modelo Mk los cambios entre estados de caracter pueden ocurrir en cualquier momento, la tasa de cambio depende solo del estado de caracter actual y no depende en absoluto de ningún estado de caracter anterior en el proceso evolutivo. Es decir, es un proceso que no tiene memoria y lo único que importa es el estado actual y la tasa de cambio de ese estado a los estados de carácter alternativos.
+La tasa de cambio se puede denotar con el parámetro q. Si q es grande, el tiempo de espera para sufrir un cambio es pequeño y la tasa de cambio grande. Si q es pequeño, todo lo contrario.
+En la versión inical del modelo Mk había una sola tasa de cambio entre los 2 o más estados de carácter. Sin embargo, con el paso del tiempo, se han desarrollado modelo Mk cada vez más compejos.
+En la actualidad de usa una matriz denominada Q con k filas x k columnas donde se recogen todas las tasas de cambio instantaneo entre todos los estados de caracter.
+
+La mejor manera de estender el modelo es sin duda simular datos bajo el modelo en cuestión.
+Hay varias funciones de R que pueden hacer esto. Usaremos la función sim.history de phytools. Esta función simula la historia evolutiva completa de un carácter en un árbol filogenético. Vamos simular la evolución de un rasgo binario en un árbol bajo tres escenarios evolutivos.
+
+```{r}
+## load phytools
+library(phytools)
+##assign colors for the two states
+colors<-setNames(c("grey","black"),0:1)
+colors
+##simulate a stochastic pure-birth tree with 100 taxa
+tree<-pbtree(n=100,scale=1)
+par(mfrow=c(1,3))
+## Q matrix for simualtion 1: equal backward & forward
+## rates (ER)
+Q1<-matrix(c(-1,1,1,-1),2,2,byrow=TRUE,dimnames=list(0:1,0:1))
+Q1
+## simulate ER character evolution and plot
+plot(sim.history(tree,Q1,message=FALSE),colors,ftype="off",mar=c(1.1,1.1,1.1,0.1))
+mtext("(a)",line=-1,adj=0)
+legend(x="bottomleft",legend=c("0","1"),pt.cex=1.5,pch=15,col=colors,bty="n")
+## Q matrix for simulation 2: different backward &
+## forward transition rates (ARD)
+Q2<-matrix(c(-1,1,0.25,-25),2,2,byrow=TRUE,dimnames=list(0:1,0:1))
+Q2
+## simulate ARD character evolution and plot
+plot(sim.history(tree,Q2,direction="row_to_column",message=FALSE),colors,ftype="off",mar=c(1.1,1.1,1.1,0.1))
+mtext("(b)",line=-1,adj=0)
+## Q matrix for (effectively) irreversible trait
+## evolution (changes from 1->0, but not the reverse)
+Q3<-matrix(c(-1e-12,1e-12,1,-1),2,2,byrow=TRUE,dimnames=list(0:1,0:1))
+Q3
+## simulate irreversible character evolution and plot
+plot(sim.history(tree,Q3,anc="1",direction="row_to_column",message=FALSE),colors,ftype="off",mar=c(1.1,1.1,1.1,0.1))
+mtext("(c)",line=-1,adj=0)
+```
+
+Podemos ver como en el primer caso los dos estados de caracter ocurren más o menos el mismo tiempo evolutivo en la filogenia. En el segundo estamos más tiempo en la filogenia en el estado de caracter 0 que en el 1. Y en el tercer caso las transiciones de 0 a 1 no están permitidas.
+
+Para ajustar el modelo Mk a unos datos concretos lo que hacemos es lo siguiente. Para cualquier posible matriz de transición Q, calculamos su ML como la probabilidad la probabilida de un patrón de estados de caracter en los terminales de la filogenia. Si procedemos a calcular los valores de matriz Q que maximizan esta probabilidad, encontraremos la estima de maximum likelihoos (MLE) de Q.
+Para aprenden como ajustar modelos de caracteres discretos vamos a usar unos datos y filogenia disponibles en este proyecto de R (Brandley et al., 2008). Esto es una macrofilogenia de serpientes y lagartos y un dataset el número de dedos en las patas traseras de estos animales (Brandley et al., 2008).
+Vamos a cargar los los datos, echarles un vistazo y preparalos para los análisis.
+
+```{r}
+library(geiger)
+## read data matrix
+sqData<-read.csv("squamate-data.csv",row.names=1)
+## print dimensions of our data frame
+dim(sqData)
+## read phylogenetic tree
+sqTree<-read.nexus("squamate.tre")
+print(sqTree,printlen=2)
+## plot our tree
+plotTree(sqTree,type="fan",lwd=1,fsize=0.3,ftype="i")
+## check name matching
+chk<-name.check(sqTree,sqData)
+summary(chk)
+## drop tips of tree that are missing from data matrix
+sqTree.pruned<-drop.tip(sqTree,chk$tree_not_data)
+## drop rows of matrix that are missing from tree
+sqData.pruned<-sqData[!(rownames(sqData)%in%chk$data_not_tree),,drop=FALSE]
+## extract discrete trait
+toes<-setNames(as.factor(sqData.pruned[,"rear.toes"]),rownames(sqData.pruned))
+head(toes)
+```
+
+Ya estamos listos para ajustar nuestros modelos. Para ello vamos usar la función fitDiscrete.
+
+En primer lugar vamos a ajustar el model ER o equal rates. Es decir, un sólo parámetro para todas las transciones posibles (Harmon, 2019)
+
+```{r}
+## fit ER model to squamate toe data using fitDiscrete
+fitER<-fitDiscrete(sqTree.pruned,toes,model="ER")
+print(fitER,digits=3)
+
+## plot fitted ER model
+plot(fitER,mar=rep(0,4),signif=5)
+
+```
+
+Podemos apreciar os parámetros estimados y el diagnóstico de convergencia.
+Podeoms apreciar que nuestro parámetro q es 0.00103.
+q es la tasa de cambio instantaneo. Para calcular el número de transiciones podemos calcularlo como el producto entre q y t (tiempo).
+
+En segundo lugar vamos a ajustar el modelo SYM de tasas simétricas. Es decir, cada transición es modelizada con parámetro diferente, pero este parámetro es reversible (Harmon, 2019.
+
+```{r}
+## fit ER model to squamate toe data using fitDiscrete
+fitSYM<-fitDiscrete(sqTree.pruned,toes,model="SYM")
+print(fitER,digits=3)
+
+## graph fitted SYM model
+plot(fitSYM,show.zeros=FALSE,mar=rep(0,4),signif=5)
+
+```
+
+Podemos observar de nuevo todos los parámetros del modelo y el diagnóstico de convergencia. En este caso podemos apreciar como la matriz Q es simétrica.
+
+Finalmente vamos a ajustar un modelo más complejo donde cada tipo de transición se modeliza con el un parámetro diferente.
+
+```{r}
+## fit ARD model
+fitARD<-fitDiscrete(sqTree.pruned,toes,model="ARD")
+print(fitARD,digits=3)
+
+## graph fitted ARD model
+plot(fitARD,show.zeros=FALSE,mar=rep(0,4),signif=5)
+```
+En este caso todos lo parámetros recogidos en la matriz Q son diferentes.
+
+Además de los modelos ER, SYM y ARD hay otros posible modelos que podemos imaginar y que podemos también ajustar.
+
+Volviendo al ejemplo anterior podemos imaginar un modelo en el que los dedos de los reptiles se pueden perder pero no ganar o que se pueden peder o ganar pero sólo añadiendo o perdiendo un dedo en cada paso (Brandley et al., 2018.
+Esto lo podemos hacer con modificando la matriz Q y con la función fitDiscrete.
+Pasemos pues a construir las matrices Q de los modelos ordered (solo son permitidos las mutaciones de perdida o ganancia de un dedo) o directional (los dedos se pueden peder pero no ganar).
+
+```{r}
+## create design matrix for bi-directional
+## ordered model
+
+ordered.model<-matrix(c(0,1,0,0,0,0,2,0,3,0,0,0,0,4,0,5,0,0,0,0,6,0,7,0,0,0,0,8,0,9,0,0,0,0,10,0),6,6,byrow=TRUE,dimnames=list(0:5,0:5))
+ordered.model
+
+## create design matrix for directional ordered
+## model
+directional.model<-matrix(c(0,0,0,0,0,0,1,0,0,0,0,0,0,2,0,0,0,0,0,0,3,0,0,0,0,0,0,4,0,0,0,0,0,0,5,0),6,6,byrow=TRUE,dimnames=list(0:5,0:5))
+directional.model
+```
+
+Podemos apreciar como el primer modelo tiene 10 parámetros diferentes y el segundo 5 parámetros diferentes.
+
+Ahora estamos listos para ajustar los modelos.
+
+```{r}
+
+## fit bi-directional ordered model
+fitOrdered<-fitDiscrete(sqTree.pruned,toes,model=ordered.model,surpressWarnings=TRUE)
+print(fitOrdered,digits=3)
+
+## fit directional (loss only) ordered model
+fitDirectional<-fitDiscrete(sqTree.pruned,toes,model=directional.model,surpressWarnings=TRUE)
+print(fitDirectional,digits=3)
+
+```
+
+
+Observemos los nuevos modelos.
+
+```{r}
+## split plot area into two panels
+par(mfrow=c(1,2))
+## plot ordered and directional models
+plot(fitOrdered,show.zeros=FALSE,signif=5,mar=c(0.1,1.1,0.1,0.1))
+mtext("(a)",line=-2,adj=0,cex=1.5)
+plot(fitDirectional,show.zeros=FALSE,signif=5,mar=c(0.1,1.1,0.1,0.1))
+mtext("(b)",line=-2,adj=0,cex=1.5)
+
+```
+
+Cómo se puede apreciar hay un multitud de modelos que podemos ajustar. Pero recomendamos ajustar modelos que sean simples y que tengan una justificación biológica.
+
+Finalmente es relativamente fácil comparar los diferentes modelos en R. Al ser modelos encajados (ER es más simple que SYM y SYM más simple que ARD) podemos efectuar esta comparación con LRT y con la X2. Según la teoría de maximun likelihood, el doble de la diferencia en log lilelihood de los modelos anidados debería distribuirse como una X2 con grados de libertad iguales a la diferencia en el número de parámetros entre los dos modelos ajustados (Wilks 1938).
+Esto lo podemos hacer con el paquete lmtest de R (Zeileis and Hothorn, 2002).
+
+```{r}
+
+library(lmtest)
+## likelihood-ratio test comparing ER & SYM
+lrtest(fitER,fitSYM)
+## likelihood-ratio test comparing ER & ARD
+lrtest(fitER,fitARD)
+## likelihood-ratio test comparing SYM & ARD
+lrtest(fitSYM,fitARD)
+
+```
+
+Por ahora el mejor modelo es ARD.
+
+```{r}
+## compare directional and ordered
+lrtest(fitDirectional,fitOrdered)
+## compare direction and ARD
+lrtest(fitDirectional,fitARD)
+## compare ordered and ARD
+lrtest(fitOrdered,fitARD)
+```
+
+Podríamos concluir que los mejores modelos son el ordered y directional. De hecho tiene sentido biológico y además fue el mejor modelo seleccionado en la publicación original (Brandley et al., 2008).
+
+Pero la mejor manera de comparar modelos es con AIC (Burnham & Anderson, 2003), al menos es mejor que LRT.
+```{r}
+
+## accumulate AIC scores of all five models into
+## a vector
+aic<-setNames(c(AIC(fitER),AIC(fitDirectional),AIC(fitOrdered),AIC(fitSYM),AIC(fitARD)),c("ER","Directional","Ordered","SYM","ARD"))
+aic
+aic.w(aic)
+```
+
+Finalmente construyamos una tabla con todas las comparaciones.
+
+```{r}
+round(data.frame(k=c(fitER$opt$k,fitDirectional$opt$k,fitOrdered$opt$k,fitSYM$opt$k,fitARD$opt$k),logL=c(logLik(fitER),logLik(fitDirectional),logLik(fitOrdered),logLik(fitSYM),logLik(fitARD)),AIC=aic,Akaike.w=as.vector(aic.w(aic))),3)
+```
+
+Podemos ver de nuevo como los majores modelos son los que hemos construido (ordered y directional)
+
+#####################
+
+ACTIVIDADES
+
+Utilizando el mismo árbol y conjunto de datos escamosos que en el capítulo, ajuste un modelo ordenado y un modelo direccional, pero en el que restrinja el modelo ordenado para que tenga una sola tasa de pérdida de dígitos y una tasa separada de ganancia de dígitos (k = 2) y en el que se limita el modelo direccional a una tasa única de pérdida de dígitos (k = 1). ¿Cómo se pueden comparar estos dos modelos con los modelos ordenados y direccionales de tasas múltiples que ajustamos a los mismos datos? ¿Qué revela esta comparación? 
+
+```{r}
+#Your code here
+```
+
+
+Ahora ajuste un modelo donde los dígitos sólo se pueden ganar y nunca perder. Compare este modelo con los otros candidatos. ¿Qué haces?
+
+
+```{r}
+#Your code here
+```
