@@ -225,16 +225,10 @@ Podemos ver de nuevo como los majores modelos son los que hemos construido (orde
 
 ACTIVIDADES
 
-Utilizando el mismo árbol y conjunto de datos escamosos que en el capítulo, ajuste un modelo ordenado y un modelo direccional, pero en el que restrinja el modelo ordenado para que tenga una sola tasa de pérdida de dígitos y una tasa separada de ganancia de dígitos (k = 2) y en el que se limita el modelo direccional a una tasa única de pérdida de dígitos (k = 1). ¿Cómo se pueden comparar estos dos modelos con los modelos ordenados y direccionales de tasas múltiples que ajustamos a los mismos datos? ¿Qué revela esta comparación? 
+Utilizando el mismo árbol y conjunto de datos anterior, ajuste un modelo ordenado y un modelo direccional, pero en el que restrinja el modelo ordenado para que tenga una sola tasa de pérdida de dígitos y una tasa separada de ganancia de dígitos (k = 2) y en el que se limita el modelo direccional a una tasa única de pérdida de dígitos (k = 1). ¿Cómo se pueden comparar estos dos modelos con los modelos ordenados y direccionales de tasas múltiples que ajustamos a los mismos datos? ¿Qué revela esta comparación? 
 
 ```{r}
 #Your code here
 ```
 
 
-Ahora ajuste un modelo donde los dígitos sólo se pueden ganar y nunca perder. Compare este modelo con los otros candidatos. ¿Qué haces?
-
-
-```{r}
-#Your code here
-```
