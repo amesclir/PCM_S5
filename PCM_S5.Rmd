@@ -13,7 +13,7 @@ El modelo predominante para estudiar la evolución de rasgos discretos en la fil
 En el modelo Mk los cambios entre estados de caracter pueden ocurrir en cualquier momento, la tasa de cambio depende solo del estado de caracter actual y no depende en absoluto de ningún estado de caracter anterior en el proceso evolutivo. Es decir, es un proceso que no tiene memoria y lo único que importa es el estado actual y la tasa de cambio de ese estado a los estados de carácter alternativos.
 La tasa de cambio se puede denotar con el parámetro q. Si q es grande, el tiempo de espera para sufrir un cambio es pequeño y la tasa de cambio grande. Si q es pequeño, todo lo contrario.
 En la versión inical del modelo Mk había una sola tasa de cambio entre los 2 o más estados de carácter. Sin embargo, con el paso del tiempo, se han desarrollado modelo Mk cada vez más compejos.
-En la actualidad de usa una matriz denominada Q con k filas x k columnas donde se recogen todas las tasas de cambio instantaneo entre todos los estados de caracter.
+En la actualidad se usa una matriz denominada Q con k filas x k columnas donde se recogen todas las tasas de cambio instantaneo entre todos los estados de caracter.
 
 La mejor manera de estender el modelo es sin duda simular datos bajo el modelo en cuestión.
 Hay varias funciones de R que pueden hacer esto. Usaremos la función sim.history de phytools. Esta función simula la historia evolutiva completa de un carácter en un árbol filogenético. Vamos simular la evolución de un rasgo binario en un árbol bajo tres escenarios evolutivos.
@@ -53,7 +53,7 @@ mtext("(c)",line=-1,adj=0)
 
 Podemos ver como en el primer caso los dos estados de caracter ocurren más o menos el mismo tiempo evolutivo en la filogenia. En el segundo estamos más tiempo en la filogenia en el estado de caracter 0 que en el 1. Y en el tercer caso las transiciones de 0 a 1 no están permitidas.
 
-Para ajustar el modelo Mk a unos datos concretos lo que hacemos es lo siguiente. Para cualquier posible matriz de transición Q, calculamos su ML como la probabilidad la probabilida de un patrón de estados de caracter en los terminales de la filogenia. Si procedemos a calcular los valores de matriz Q que maximizan esta probabilidad, encontraremos la estima de maximum likelihoos (MLE) de Q.
+Para ajustar el modelo Mk a unos datos concretos lo que hacemos es lo siguiente. Para cualquier posible matriz de transición Q, calculamos su ML como la probabilidad de un patrón de estados de caracter en los terminales de la filogenia. Si procedemos a calcular los valores de matriz Q que maximizan esta probabilidad, encontraremos la estima de maximum likelihood (MLE) de Q.
 Para aprenden como ajustar modelos de caracteres discretos vamos a usar unos datos y filogenia disponibles en este proyecto de R (Brandley et al., 2008). Esto es una macrofilogenia de serpientes y lagartos y un dataset el número de dedos en las patas traseras de estos animales (Brandley et al., 2008).
 Vamos a cargar los los datos, echarles un vistazo y preparalos para los análisis.
 
@@ -82,7 +82,7 @@ head(toes)
 
 Ya estamos listos para ajustar nuestros modelos. Para ello vamos usar la función fitDiscrete.
 
-En primer lugar vamos a ajustar el model ER o equal rates. Es decir, un sólo parámetro para todas las transciones posibles (Harmon, 2019)
+En primer lugar vamos a ajustar el model ER o equal rates. Es decir, un sólo parámetro para todas las transciones posibles (Harmon, 2019).
 
 ```{r}
 ## fit ER model to squamate toe data using fitDiscrete
@@ -94,13 +94,14 @@ plot(fitER,mar=rep(0,4),signif=5)
 
 ```
 
-Podemos apreciar os parámetros estimados y el diagnóstico de convergencia.
-Podeoms apreciar que nuestro parámetro q es 0.00103.
+Podemos apreciar los parámetros estimados y el diagnóstico de convergencia.
+Podemos apreciar que nuestro parámetro q es 0.00103.
 q es la tasa de cambio instantaneo. Para calcular el número de transiciones podemos calcularlo como el producto entre q y t (tiempo).
 
-En segundo lugar vamos a ajustar el modelo SYM de tasas simétricas. Es decir, cada transición es modelizada con parámetro diferente, pero este parámetro es reversible (Harmon, 2019.
+En segundo lugar vamos a ajustar el modelo SYM de tasas simétricas. Es decir, cada transición es modelizada con parámetro diferente, pero este parámetro es reversible (Harmon, 2019).
 
 ```{r}
+## warning, it will take a while
 ## fit ER model to squamate toe data using fitDiscrete
 fitSYM<-fitDiscrete(sqTree.pruned,toes,model="SYM")
 print(fitER,digits=3)
@@ -115,6 +116,7 @@ Podemos observar de nuevo todos los parámetros del modelo y el diagnóstico de 
 Finalmente vamos a ajustar un modelo más complejo donde cada tipo de transición se modeliza con el un parámetro diferente.
 
 ```{r}
+## warning, it will take a while
 ## fit ARD model
 fitARD<-fitDiscrete(sqTree.pruned,toes,model="ARD")
 print(fitARD,digits=3)
@@ -124,9 +126,9 @@ plot(fitARD,show.zeros=FALSE,mar=rep(0,4),signif=5)
 ```
 En este caso todos lo parámetros recogidos en la matriz Q son diferentes.
 
-Además de los modelos ER, SYM y ARD hay otros posible modelos que podemos imaginar y que podemos también ajustar.
+Además de los modelos ER, SYM y ARD hay otros posibles modelos que podemos imaginar y que podemos también ajustar.
 
-Volviendo al ejemplo anterior podemos imaginar un modelo en el que los dedos de los reptiles se pueden perder pero no ganar o que se pueden peder o ganar pero sólo añadiendo o perdiendo un dedo en cada paso (Brandley et al., 2018.
+Volviendo al ejemplo anterior podemos imaginar un modelo en el que los dedos de los reptiles se pueden perder pero no ganar o que se pueden peder o ganar pero sólo añadiendo o perdiendo un dedo en cada paso (Brandley et al., 2018).
 Esto lo podemos hacer con modificando la matriz Q y con la función fitDiscrete.
 Pasemos pues a construir las matrices Q de los modelos ordered (solo son permitidos las mutaciones de perdida o ganancia de un dedo) o directional (los dedos se pueden peder pero no ganar).
 
@@ -145,10 +147,10 @@ directional.model
 
 Podemos apreciar como el primer modelo tiene 10 parámetros diferentes y el segundo 5 parámetros diferentes.
 
-Ahora estamos listos para ajustar los modelos.
+Ahora estamos listos para ajustar los nuevos modelos customizados.
 
 ```{r}
-
+## warning, it will take a while
 ## fit bi-directional ordered model
 fitOrdered<-fitDiscrete(sqTree.pruned,toes,model=ordered.model,surpressWarnings=TRUE)
 print(fitOrdered,digits=3)
@@ -173,7 +175,7 @@ mtext("(b)",line=-2,adj=0,cex=1.5)
 
 ```
 
-Cómo se puede apreciar hay un multitud de modelos que podemos ajustar. Pero recomendamos ajustar modelos que sean simples y que tengan una justificación biológica.
+Cómo se puede apreciar hay una multitud de modelos que podemos ajustar. Pero recomendamos ajustar modelos que sean simples y que tengan una justificación biológica.
 
 Finalmente es relativamente fácil comparar los diferentes modelos en R. Al ser modelos encajados (ER es más simple que SYM y SYM más simple que ARD) podemos efectuar esta comparación con LRT y con la X2. Según la teoría de maximun likelihood, el doble de la diferencia en log lilelihood de los modelos anidados debería distribuirse como una X2 con grados de libertad iguales a la diferencia en el número de parámetros entre los dos modelos ajustados (Wilks 1938).
 Esto lo podemos hacer con el paquete lmtest de R (Zeileis and Hothorn, 2002).
@@ -229,6 +231,24 @@ Utilizando el mismo árbol y conjunto de datos anterior, ajuste un modelo ordena
 
 ```{r}
 #Your code here
+
 ```
 
+BIBLIOGRAFÍA BÁSICA
 
+Harmon, L. (2019). Phylogenetic comparative methods: learning from trees.
+
+
+BIBLIOGRAFÍA RECOMENDADA
+
+Brandley, M. C., Huelsenbeck, J. P., & Wiens, J. J. (2008). Rates and patterns in the evolution of snake-like body form in squamate reptiles: evidence for repeated re-evolution of lost digits and long-term persistence of intermediate body forms. Evolution, 62(8), 2042-2064.
+
+Burnham, K. P., & Anderson, D. R. (2003). Model Selection and Multi-Model Inference: A Practical Information-Theoretic Approach. 2002. corr.
+
+Lewis, M. E., & Puterman, M. L. (2001). A probabilistic analysis of bias optimality in unichain Markov decision processes. IEEE Transactions on Automatic Control, 46(1), 96-100.
+
+Wilks, S. S. (1938). The large-sample distribution of the likelihood ratio for testing composite hypotheses. The annals of mathematical statistics, 9(1), 60-62.
+
+Yang, Z. (2006). Computational molecular evolution. OUP Oxford.
+
+Zeileis, A., & Hothorn, T. (2002). Diagnostic checking in regression relationships (Vol. 2, No. 3, pp. 7-10). na.
