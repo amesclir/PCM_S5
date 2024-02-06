@@ -227,10 +227,20 @@ Podemos ver de nuevo como los majores modelos son los que hemos construido (orde
 
 ACTIVIDADES
 
-Utilizando el mismo árbol y conjunto de datos anterior, ajuste un modelo ordenado y un modelo direccional, pero en el que restrinja el modelo ordenado para que tenga una sola tasa de pérdida de dígitos y una tasa separada de ganancia de dígitos (k = 2) y en el que se limita el modelo direccional a una tasa única de pérdida de dígitos (k = 1). ¿Cómo se pueden comparar estos dos modelos con los modelos ordenados y direccionales de tasas múltiples que ajustamos a los mismos datos? ¿Qué revela esta comparación? 
+1. Utilizando el mismo árbol y conjunto de datos anterior, ajuste un modelo ordenado y un modelo direccional, pero en el que restrinja el modelo ordenado para que tenga una sola tasa de pérdida de dígitos y una tasa separada de ganancia de dígitos (k = 2) y en el que se limita el modelo direccional a una tasa única de pérdida de dígitos (k = 1). ¿Cómo se pueden comparar estos dos modelos con los modelos ordenados y direccionales de tasas múltiples que ajustamos a los mismos datos? ¿Qué revela esta comparación? 
 
 ```{r}
 #Your code here
+
+```
+
+
+2. Utiliza la función fitDiscrete y el mejor model (ordered) para calcular la señal filogenética de nuestro carácter de interés (número de dedos en la patas trasera de los reptiles).  
+
+```{r}
+#Your code here
+?fitDiscrete
+
 
 ```
 
