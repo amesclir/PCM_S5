@@ -104,7 +104,7 @@ En segundo lugar vamos a ajustar el modelo SYM de tasas simétricas. Es decir, c
 ## warning, it will take a while
 ## fit ER model to squamate toe data using fitDiscrete
 fitSYM<-fitDiscrete(sqTree.pruned,toes,model="SYM")
-print(fitER,digits=3)
+print(fitSYM,digits=3)
 
 ## graph fitted SYM model
 plot(fitSYM,show.zeros=FALSE,mar=rep(0,4),signif=5)
@@ -139,10 +139,14 @@ Pasemos pues a construir las matrices Q de los modelos ordered (solo son permiti
 ordered.model<-matrix(c(0,1,0,0,0,0,2,0,3,0,0,0,0,4,0,5,0,0,0,0,6,0,7,0,0,0,0,8,0,9,0,0,0,0,10,0),6,6,byrow=TRUE,dimnames=list(0:5,0:5))
 ordered.model
 
+
+
 ## create design matrix for directional ordered
 ## model
 directional.model<-matrix(c(0,0,0,0,0,0,1,0,0,0,0,0,0,2,0,0,0,0,0,0,3,0,0,0,0,0,0,4,0,0,0,0,0,0,5,0),6,6,byrow=TRUE,dimnames=list(0:5,0:5))
 directional.model
+
+
 ```
 
 Podemos apreciar como el primer modelo tiene 10 parámetros diferentes y el segundo 5 parámetros diferentes.
@@ -154,6 +158,9 @@ Ahora estamos listos para ajustar los nuevos modelos customizados.
 ## fit bi-directional ordered model
 fitOrdered<-fitDiscrete(sqTree.pruned,toes,model=ordered.model,surpressWarnings=TRUE)
 print(fitOrdered,digits=3)
+
+fitOrdered2<-fitDiscrete(sqTree.pruned,toes,model=ordered.model2,surpressWarnings=TRUE)
+print(fitOrdered2,digits=3)
 
 ## fit directional (loss only) ordered model
 fitDirectional<-fitDiscrete(sqTree.pruned,toes,model=directional.model,surpressWarnings=TRUE)
@@ -235,7 +242,7 @@ ACTIVIDADES
 ```
 
 
-2. Utiliza la función fitDiscrete y el mejor model (ordered) para calcular la señal filogenética de nuestro carácter de interés (número de dedos en la patas trasera de los reptiles).  
+2. Utiliza la función fitDiscrete y el mejor modelo (directional) para calcular la señal filogenética de nuestro carácter de interés (número de dedos en la patas trasera de los reptiles).  
 
 ```{r}
 #Your code here
