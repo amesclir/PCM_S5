@@ -12,10 +12,10 @@ El MODELO DE MARKOV
 El modelo predominante para estudiar la evolución de rasgos discretos en la filogenia se llama el modeo de Markov (Lewis 2001). Este modelo describe un procesos continuo en el tiempo donde hay un número de estados de carácter K. Este modelo inspiró los modelos que se se usan para modelizar la evolución de las moleculas de ADN (Yang 2006).
 En el modelo Mk los cambios entre estados de caracter pueden ocurrir en cualquier momento, la tasa de cambio depende solo del estado de caracter actual y no depende en absoluto de ningún estado de caracter anterior en el proceso evolutivo. Es decir, es un proceso que no tiene memoria y lo único que importa es el estado actual y la tasa de cambio de ese estado a los estados de carácter alternativos.
 La tasa de cambio se puede denotar con el parámetro q. Si q es grande, el tiempo de espera para sufrir un cambio es pequeño y la tasa de cambio grande. Si q es pequeño, todo lo contrario.
-En la versión inical del modelo Mk había una sola tasa de cambio entre los 2 o más estados de carácter. Sin embargo, con el paso del tiempo, se han desarrollado modelo Mk cada vez más compejos.
+En la versión inical del modelo Mk había una sola tasa de cambio entre los 2 o más estados de carácter. Sin embargo, con el paso del tiempo, se han desarrollado modelo Mk cada vez más complejos.
 En la actualidad se usa una matriz denominada Q con k filas x k columnas donde se recogen todas las tasas de cambio instantaneo entre todos los estados de caracter.
 
-La mejor manera de estender el modelo es sin duda simular datos bajo el modelo en cuestión.
+La mejor manera de entender el modelo es sin duda simular datos bajo el modelo en cuestión.
 Hay varias funciones de R que pueden hacer esto. Usaremos la función sim.history de phytools. Esta función simula la historia evolutiva completa de un carácter en un árbol filogenético. Vamos simular la evolución de un rasgo binario en un árbol bajo tres escenarios evolutivos.
 
 ```{r}
@@ -184,7 +184,7 @@ mtext("(b)",line=-2,adj=0,cex=1.5)
 
 Cómo se puede apreciar hay una multitud de modelos que podemos ajustar. Pero recomendamos ajustar modelos que sean simples y que tengan una justificación biológica.
 
-Finalmente es relativamente fácil comparar los diferentes modelos en R. Al ser modelos encajados (ER es más simple que SYM y SYM más simple que ARD) podemos efectuar esta comparación con LRT y con la X2. Según la teoría de maximun likelihood, el doble de la diferencia en log lilelihood de los modelos anidados debería distribuirse como una X2 con grados de libertad iguales a la diferencia en el número de parámetros entre los dos modelos ajustados (Wilks 1938).
+Finalmente es relativamente fácil comparar los diferentes modelos en R. Al ser modelos encajados (ER es más simple que SYM y SYM más simple que ARD) podemos efectuar esta comparación con LRT y con la X2. Según la teoría de maximum likelihood, el doble de la diferencia en log lilelihood de los modelos anidados debería distribuirse como una X2 con grados de libertad iguales a la diferencia en el número de parámetros entre los dos modelos ajustados (Wilks 1938).
 Esto lo podemos hacer con el paquete lmtest de R (Zeileis and Hothorn, 2002).
 
 ```{r}
@@ -210,7 +210,7 @@ lrtest(fitDirectional,fitARD)
 lrtest(fitOrdered,fitARD)
 ```
 
-Podríamos concluir que los mejores modelos son el ordered y directional. De hecho tiene sentido biológico y además fue el mejor modelo seleccionado en la publicación original (Brandley et al., 2008).
+Podríamos concluir que los mejores modelos son el ordered y directional (el mejor es directional). De hecho tiene sentido biológico y además fue el mejor modelo seleccionado en la publicación original (Brandley et al., 2008).
 
 Pero la mejor manera de comparar modelos es con AIC (Burnham & Anderson, 2003), al menos es mejor que LRT.
 ```{r}
@@ -228,7 +228,7 @@ Finalmente construyamos una tabla con todas las comparaciones.
 round(data.frame(k=c(fitER$opt$k,fitDirectional$opt$k,fitOrdered$opt$k,fitSYM$opt$k,fitARD$opt$k),logL=c(logLik(fitER),logLik(fitDirectional),logLik(fitOrdered),logLik(fitSYM),logLik(fitARD)),AIC=aic,Akaike.w=as.vector(aic.w(aic))),3)
 ```
 
-Podemos ver de nuevo como los majores modelos son los que hemos construido (ordered y directional)
+Podemos ver de nuevo como los majores modelos son los que hemos construido (ordered y directional, especialmente directional).
 
 #####################
 
