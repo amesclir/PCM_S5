@@ -159,8 +159,7 @@ Ahora estamos listos para ajustar los nuevos modelos customizados.
 fitOrdered<-fitDiscrete(sqTree.pruned,toes,model=ordered.model,surpressWarnings=TRUE)
 print(fitOrdered,digits=3)
 
-fitOrdered2<-fitDiscrete(sqTree.pruned,toes,model=ordered.model2,surpressWarnings=TRUE)
-print(fitOrdered2,digits=3)
+
 
 ## fit directional (loss only) ordered model
 fitDirectional<-fitDiscrete(sqTree.pruned,toes,model=directional.model,surpressWarnings=TRUE)
